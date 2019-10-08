@@ -26,11 +26,11 @@ class Sender(HawkAuthority):
     :param method: Method of the request. E.G. POST, GET
     :type method: str
 
-    :param content=EmptyValue: Byte string of request body.
+    :param content=EmptyValue: Byte string of request body, or a file-like object.
     :type content=EmptyValue: str
 
     :param content_type=EmptyValue: content-type header value for request.
-    :type content_type=EmptyValue: str
+    :type content_type=EmptyValue: str or file-like object
 
     :param always_hash_content=True:
         When True, ``content`` and ``content_type`` must be provided.
