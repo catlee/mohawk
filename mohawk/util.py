@@ -58,9 +58,17 @@ def calculate_payload_hash(payload, algorithm, content_type):
 
     for i, p in enumerate(parts):
         # Make sure we are about to hash binary strings.
-        if not isinstance(p, six.binary_type):
+        if hasattr(p, "read"):
+            while True:
+                block = p.read(1024)
+                if not block:
+                    break
+                p_hash.update(block)
+        elif not isinstance(p, six.binary_type):
             p = p.encode('utf8')
-        p_hash.update(p)
+            p_hash.update(p)
+        else:
+            p_hash.update(p)
         parts[i] = p
 
     log.debug('calculating payload hash from:\n{parts}'

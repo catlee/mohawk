@@ -443,6 +443,19 @@ class TestSender(Base):
         header = sn.request_header.replace(dlg, 'TAMPERED-WITH')
         self.receive(header)
 
+    def test_file_content(self):
+        method = "POST"
+        content = six.BytesIO(b"FILE CONTENT")
+        sn = self.Sender(method, content=content)
+        self.receive(sn.request_header, method=method, content=content.getvalue())
+
+    @raises(MisComputedContentHash)
+    def test_bad_file_content(self):
+        method = "POST"
+        content = six.BytesIO(b"FILE CONTENT")
+        sn = self.Sender(method, content=content)
+        self.receive(sn.request_header, method=method, content="BAD FILE CONTENT")
+
 
 class TestReceiver(Base):
 
