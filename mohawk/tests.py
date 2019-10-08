@@ -22,6 +22,7 @@ from .exc import (AlreadyProcessed,
                   MissingContent)
 from .util import (parse_authorization_header,
                    utc_now,
+                   calculate_payload_hash,
                    calculate_ts_mac,
                    validate_credentials)
 from .bewit import (get_bewit,
@@ -446,6 +447,12 @@ class TestSender(Base):
     def test_file_content(self):
         method = "POST"
         content = six.BytesIO(b"FILE CONTENT")
+        sn = self.Sender(method, content=content)
+        self.receive(sn.request_header, method=method, content=content.getvalue())
+
+    def test_binary_file_content(self):
+        method = "POST"
+        content = six.BytesIO(b"\x00\xffCONTENT\xff\x00")
         sn = self.Sender(method, content=content)
         self.receive(sn.request_header, method=method, content=content.getvalue())
 
@@ -1012,3 +1019,25 @@ class TestBewit(Base):
             'other_id': self.credentials,
         })
         check_bewit(url, credential_lookup=credential_lookup, now=1356420407 + 10)
+
+
+class TestPayloadHash(Base):
+    def test_hash_string(self):
+        payload = "hello world"
+        h = calculate_payload_hash(payload, 'sha256', 'application/json')
+        assert h == b'VKcQum9v7uK+x70J+4yWUPxT+cRsYCw8dxTvExGaPks='
+
+    def test_hash_binary(self):
+        payload = b"\x00\xffhello world\xff\x00"
+        h = calculate_payload_hash(payload, 'sha256', 'application/json')
+        assert h == b'Pad106+P9O4UzqCaQA2npbLlGgasj9YQJE9EWXIQrSw='
+
+    def test_hash_file(self):
+        payload = six.BytesIO(b"\x00\xffhello world\xff\x00")
+        h = calculate_payload_hash(payload, 'sha256', 'application/json')
+        assert h == b'Pad106+P9O4UzqCaQA2npbLlGgasj9YQJE9EWXIQrSw='
+
+    def test_hash_file_read_blocks(self):
+        payload = six.BytesIO(b"\x00\xffhello world\xff\x00")
+        h = calculate_payload_hash(payload, 'sha256', 'application/json', block_size=1)
+        assert h == b'Pad106+P9O4UzqCaQA2npbLlGgasj9YQJE9EWXIQrSw='
