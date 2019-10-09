@@ -1022,22 +1022,9 @@ class TestBewit(Base):
 
 
 class TestPayloadHash(Base):
-    def test_hash_string(self):
-        payload = "hello world"
-        h = calculate_payload_hash(payload, 'sha256', 'application/json')
-        assert h == b'VKcQum9v7uK+x70J+4yWUPxT+cRsYCw8dxTvExGaPks='
-
-    def test_hash_binary(self):
-        payload = b"\x00\xffhello world\xff\x00"
-        h = calculate_payload_hash(payload, 'sha256', 'application/json')
-        assert h == b'Pad106+P9O4UzqCaQA2npbLlGgasj9YQJE9EWXIQrSw='
-
-    def test_hash_file(self):
-        payload = six.BytesIO(b"\x00\xffhello world\xff\x00")
-        h = calculate_payload_hash(payload, 'sha256', 'application/json')
-        assert h == b'Pad106+P9O4UzqCaQA2npbLlGgasj9YQJE9EWXIQrSw='
-
     def test_hash_file_read_blocks(self):
         payload = six.BytesIO(b"\x00\xffhello world\xff\x00")
-        h = calculate_payload_hash(payload, 'sha256', 'application/json', block_size=1)
-        assert h == b'Pad106+P9O4UzqCaQA2npbLlGgasj9YQJE9EWXIQrSw='
+        h1 = calculate_payload_hash(payload, 'sha256', 'application/json', block_size=1)
+        payload.seek(0)
+        h2 = calculate_payload_hash(payload, 'sha256', 'application/json', block_size=1024)
+        self.assertEqual(h1, h2)
